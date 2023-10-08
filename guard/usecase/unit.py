@@ -36,7 +36,7 @@ class UnitUseCase(UseCase):
             name = f'{method} {url}'
         super().__init__(name)
 
-        self.client = client or HttpClient()
+        self.client = client
         self.request = Request(method.upper(), url, **kwargs)
         self.assertions = assertions or []
 
@@ -44,6 +44,8 @@ class UnitUseCase(UseCase):
         """
         This method is used to execute the use case.
         """
+        if self.client is None:
+            self.client = HttpClient()
         response = self.client.send_request(self.request)
         try:
             for assertion in self.assertions:

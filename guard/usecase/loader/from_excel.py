@@ -15,7 +15,6 @@ class ExcelUseCaseLoader(UseCaseLoader):
     def __init__(self, file_path: str) -> None:
         super().__init__()
         self.file_path = file_path
-        self.read_excel()
 
     def read_excel(self):
         wb = openpyxl.load_workbook(self.file_path)
