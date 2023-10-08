@@ -5,12 +5,28 @@ description = "API Guard is a robust quality assurance and security framework fo
 authors = ["juqi.peng <pengjuqi@163.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "api_guard"}]
+packages = [{include = "guard"}]
+homepage = "https://github.com/mnioc/api-guard.git"
 
 [tool.poetry.dependencies]
 python = "^3.10.4"
+colorlog = "^6.7.0"
+loguru = "^0.6.0"
+requests = "^2.26.0"
+jsonpath-rw = "^1.4.0"
+click = "^8.1.3"
+pyyaml = "^6.0"
+colorama = "^0.4.6"
+prettytable = "^3.8.0"
+jsonpath-ng = "^1.5.3"
+ipython = "^8.15.0"
+pytz = "^2023.3.post1"
+openpyxl = "^3.1.2"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+guard = "guard.bin.cli:runner_cli"

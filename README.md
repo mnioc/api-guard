@@ -1,5 +1,5 @@
 # api-guard - HTTP API Automation Testing Framework
-eagle is a powerful HTTP API automation testing framework designed to simplify and accelerate the API testing process. It can automatically discover test cases, support the generation of positive and negative test cases, and comes with multiple built-in HTTP authentication clients, making testing more flexible and efficient.
+guard is a powerful HTTP API automation testing framework designed to simplify and accelerate the API testing process. It can automatically discover test cases, support the generation of positive and negative test cases, and comes with multiple built-in HTTP authentication clients, making testing more flexible and efficient.
 
 ## Features of api-guard
 - Automatic discovery of test cases: api-guard can automatically search and load unit tests and test suites in the specified directory, reducing the tedious configuration steps.
@@ -35,7 +35,7 @@ pip install api_guard
 
 
 ## Contributing
-If you would like to contribute to eagle, please check the contribution guidelines for more information.
+If you would like to contribute to guard, please check the contribution guidelines for more information.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -47,4 +47,4 @@ Have questions or suggestions? Please submit an issue on GitHub. We welcome your
 Check the FAQ for more information.
 
 ## Version History
-See the version history for updates and changes to eagle.
+See the version history for updates and changes to guard.

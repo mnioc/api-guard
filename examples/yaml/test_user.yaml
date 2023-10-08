@@ -1,0 +1,17 @@
+- name: createUser
+  method: POST
+  url: /api/v1/users
+  headers:
+    Content-Type: application/json
+  body:
+    name: "John Doe"
+    email: ""
+  expect_status_code: 201
+  expect_value: "$.code == 1000"
+
+- name: deleteUser
+  method: DELETE
+  url: /api/v1/users/1
+  headers:
+    Content-Type: application/json
+  expect_status_code: 204
