@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "api-guard"
+version = "0.1.0"
+description = "API Guard is a robust quality assurance and security framework for APIs. It provides powerful tools for monitoring, testing, and ensuring the quality and security of your APIs, ensuring that they meet your standards and compliance requirements. With API Guard, you can safeguard your API endpoints and maintain the highest level of quality in your API-driven applications."
+authors = ["juqi.peng <pengjuqi@163.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "api_guard"}]
+
+[tool.poetry.dependencies]
+python = "^3.10.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
