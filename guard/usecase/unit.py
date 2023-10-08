@@ -37,14 +37,14 @@ class UnitUseCase(UseCase):
         super().__init__(name)
 
         self.client = client or HttpClient()
-        self.req = Request(method.upper(), url, **kwargs)
+        self.request = Request(method.upper(), url, **kwargs)
         self.assertions = assertions or []
 
     def execute(self) -> None:
         """
         This method is used to execute the use case.
         """
-        response = self.client.send(self.req)
+        response = self.client.send_request(self.request)
         try:
             for assertion in self.assertions:
                 assertion(response)

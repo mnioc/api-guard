@@ -40,6 +40,7 @@ class HttpClient(requests.Session, metaclass=StrategyMeta):
     def __init__(self, endpoint: str = None, authentication: Optional[Authentication] = None, **kwargs: Any):
         self.endpoint = endpoint
         self.authentication = authentication
+        super().__init__(**kwargs)
 
     @classmethod
     def get_client(cls, auth_type: Optional[str] = None, **kwargs: Any) -> 'HttpClient':

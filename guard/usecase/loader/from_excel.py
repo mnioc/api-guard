@@ -1,4 +1,5 @@
 import openpyxl
+import json
 from guard.usecase.loader.bases import UseCaseLoader
 from collections import namedtuple
 from guard.usecase.unit import UnitUseCase
@@ -19,9 +20,13 @@ class ExcelUseCaseLoader(UseCaseLoader):
     def read_excel(self):
         wb = openpyxl.load_workbook(self.file_path)
         ws = wb.active
-        return [UseCaseRow(*row) for row in ws.iter_rows(min_row=2, values_only=True)]
+        return [
+            UseCaseRow(*row)
+            for row in ws.iter_rows(min_row=2, values_only=True)
+            if any(cell is not None for cell in row)
+        ]
 
-    def load(self) -> None:
+    def load(self, client) -> None:
         """
         This method is used to load use case from excel file.
         """
@@ -32,16 +37,11 @@ class ExcelUseCaseLoader(UseCaseLoader):
                 'method': row.method,
                 'url': row.url,
                 'headers': row.headers,
-                'json': row.body,
-                'assertions': self._get_assertions(row.expect_status_code, row.expect_value)
+                'json': json.loads(row.body),
+                'assertions': self._get_assertions(row.expect_status_code, row.expect_value),
+                'client': client
             }
 
             self.add_usecase(
                 UnitUseCase(**kwargs)
             )
-
-
-if __name__ == '__main__':
-    loader = ExcelUseCaseLoader('/home/bot/mnio/api-guard/examples/excel/test_user.xlsx')
-    loader.load()
-    print(loader.usecases)

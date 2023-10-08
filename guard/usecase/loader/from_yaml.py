@@ -15,7 +15,7 @@ class YamlUseCaseLoader(UseCaseLoader):
         with open(self.file_path, 'r') as f:
             return yaml.load(f, Loader=yaml.FullLoader)
 
-    def load(self) -> None:
+    def load(self, client) -> None:
         """
         This method is used to load use case from excel file.
         """
@@ -27,16 +27,10 @@ class YamlUseCaseLoader(UseCaseLoader):
                 'url': item.get('url'),
                 'headers': item.get('headers'),
                 'json': item.get('body'),
+                'client': client,
+                'assertions': self._get_assertions(item.get('expect_status_code'), item.get('expect_value'))
             }
-
-            kwargs['assertions'] = self._get_assertions(item.get('expect_status_code'), item.get('expect_value'))
 
             self.add_usecase(
                 UnitUseCase(**kwargs)
             )
-
-
-if __name__ == '__main__':
-    loader = YamlUseCaseLoader('/home/bot/mnio/api-guard/examples/yaml/test_user.yaml')
-    loader.load()
-    print(loader.usecases)

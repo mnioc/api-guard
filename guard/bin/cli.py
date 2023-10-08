@@ -1,7 +1,7 @@
 from typing import Optional
 import click
 import os
-# from guard.runner import Runner
+from guard.bin.runner import Runner
 
 
 @click.group()
@@ -20,4 +20,4 @@ def run(
 ):  # sourcery skip: avoid-builtin-shadow
     if root_path is None:
         root_path = os.getcwd()
-    # Runner(root_path=root_path, prefix=prefix).run()
+    Runner(root_path=root_path, prefix=prefix).run()
