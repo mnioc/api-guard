@@ -3,6 +3,7 @@ from requests.models import Response
 from guard.assertion.bases import Assertion
 from requests.exceptions import JSONDecodeError
 from jsonpath_rw import parse
+from guard.assertion.operator import operator_map
 
 
 def get_json_path_value(response: Response, json_path: str) -> Any:
@@ -51,6 +52,9 @@ class AssertHttpResponseValue(Assertion):
 
     Args:
         json_path (str): JSON path.
+        operator (operator): Operator.
+            e.g.
+                ==, !=, >, <, >=, <=, in, not in, is, is not...
         expected_value (Any): Expected value.
         assertion (Assertion): Assertion.
 
@@ -58,21 +62,21 @@ class AssertHttpResponseValue(Assertion):
         >>> from guard.assertion.http import AssertHttpResponseValue
         >>> from guard.http.client import HttpClient
         >>> response = HttpClient().get('http://xxx.com')
-        >>> AssertHttpResponseValue('$.data.id', '000000', AssertEqual)(response)
+        >>> AssertHttpResponseValue('$.data.id', '==', '000000')(response)
 
         # if {'data': {'id': '000000'}} not in response.json():
         # raise AssertionError('Assertion failed: invalid value. Expected 000000, but got {value}.')
 
     """
-
-    def __init__(self, json_path: str, expected_value: Any, assertion: Assertion = None) -> None:
+    def __init__(self, json_path: str, operator, expected_value: Any) -> None:
         self.json_path = json_path
         self.expected_value = expected_value
-        self.assertion = assertion
-        if self.assertion is None:
-            from guard.assertion.bases import AssertEqual
-            self.assertion = AssertEqual()
+        self.operator = operator
 
     def __call__(self, response: Response) -> Any:
         value = get_json_path_value(response, self.json_path)
-        self.assertion(value, self.expected_value)
+        if self.operator not in operator_map:
+            raise KeyError(f'Operator {self.operator} is not supported.')
+
+        if not operator_map[self.operator](value, self.expected_value):
+            raise AssertionError(f'Assertion failed: {value} {self.operator} {self.expected_value} is False.')

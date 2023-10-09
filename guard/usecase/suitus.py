@@ -17,6 +17,9 @@ class UseCaseSuite(UseCase):
         if self._cases is None:
             self._cases = []
         super().__init__()
+    
+    def get_cases(self) -> List[UnitUseCase]:
+        return self._cases
 
     def add_case(self, case: UnitUseCase) -> None:
         assert isinstance(case, UnitUseCase), '`case` must be `UnitUseCase`'
@@ -27,9 +30,6 @@ class UseCaseSuite(UseCase):
             self.add_case(case)
 
     def show(self):
-        table = PrettyTable()
-        table.field_names = ["case_name", "status", "reason", "body"]
-
         for case in self._cases:
             body = json.dumps(case.request.json)
             if case.passed:

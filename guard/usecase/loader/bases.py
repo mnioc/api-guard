@@ -2,6 +2,7 @@ import abc
 import inspect
 from typing import Any, Type, Dict, Optional, Union
 from guard.assertion.http import AssertHttpStatusCodeEqual, AssertHttpResponseValue
+from guard.assertion.operator import operator_map
 
 
 class StrategyMeta(abc.ABCMeta):
@@ -48,6 +49,8 @@ class UseCaseLoader(metaclass=StrategyMeta):
         if expect_status_code:
             assertions.append(AssertHttpStatusCodeEqual(expect_status_code))
         if expect_value:
-            json_path, expect_value = expect_value.split('==')
+            for operator in operator_map:
+                if operator in expect_value:
+                    json_path, expect_value = expect_value.split(operator)
             assertions.append(AssertHttpResponseValue(json_path.strip(), expect_value.strip()))
         return assertions

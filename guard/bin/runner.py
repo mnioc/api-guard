@@ -6,6 +6,7 @@ from guard.http.client import HttpClient
 from guard.logger import logger
 from guard.usecase.loader import UseCaseLoader
 from guard.usecase.evaluator import TestEvaluator
+from guard.usecase.registry import registry
 
 
 class Runner:
@@ -91,7 +92,7 @@ class Runner:
                     continue
 
                 # we assume that the test case is in the root_path
-                # and is named test_*.py or test_*.yaml
+                # and is named test_*.py, test_*.yaml, test_*.excel
                 if file_name.startswith("test_"):
                     file_path = os.path.join(root, file_name)
                     loader = UseCaseLoader.get_loader(file_path)
@@ -100,9 +101,14 @@ class Runner:
                     loader.load(self.client)
                     self.extend_cases(loader.usecases)
 
+        self.extend_cases(registry.get_usecases())
+        logger.info(f'Auto discovering test cases in {self.root_path} finished.')
+
     def run(self) -> None:
         self.auto_discover()
         for case in self.cases:
+            if case.client is None and self.client is not None:
+                case.client = self.client
             case.execute()
         self.evaluator = TestEvaluator(self.cases)
         self.evaluator.show_test_result()
