@@ -1,8 +1,9 @@
 import inspect
-from typing import List, Optional
+from typing import List
 from guard.usecase.suitus import UseCaseSuite
 from guard.usecase.unit import UnitUseCase
-from guard.assertion.http import AssertHttpStatusCodeEqual, AssertHttpResponseValue
+from guard.assertion.http import AssertHttpStatusCodeEqual
+from guard.faker.bases import UseCaseFaker
 
 
 class CreateUseCaseMixin:
@@ -33,7 +34,8 @@ class CreateUseCaseMixin:
     def add_create_use_cases(self):
         url = self.get_create_url()
         method = self.get_create_method()
-        return UnitUseCase(
+        json = self.get_create_body()
+        usecase = UnitUseCase(
             name=f'{method} {url}',
             method=method,
             url=url,
@@ -41,6 +43,11 @@ class CreateUseCaseMixin:
             json=self.get_create_body(),
             assertions=self.get_create_assertions()
         )
+
+        # TODO refactor !!
+        if isinstance(self, FakerAutoRESTUseCaseSet) and not json:
+            return self.get_faker().fake_use_case(usecase)
+        return usecase
 
 
 class UpdateUseCaseMixin:
@@ -71,14 +78,20 @@ class UpdateUseCaseMixin:
     def add_update_use_cases(self):
         url = self.get_update_url()
         method = self.get_update_method()
-        return UnitUseCase(
+        json = self.get_create_body()
+        usecase = UnitUseCase(
             name=f'{method} {url}',
             method=method,
             url=url,
             headers=self.get_update_headers(),
-            json=self.get_update_body(),
+            json=json,
             assertions=self.get_update_assertions()
         )
+
+        # TODO refactor !!
+        if isinstance(self, FakerAutoRESTUseCaseSet) and not json:
+            return self.get_faker().fake_use_case(usecase)
+        return usecase
 
 
 class PartialUpdateUseCaseMixin:
@@ -109,14 +122,20 @@ class PartialUpdateUseCaseMixin:
     def add_partial_update_use_cases(self):
         url = self.get_partial_update_url()
         method = self.get_partial_update_method()
-        return UnitUseCase(
+        json = self.get_partial_update_body()
+        usecase = UnitUseCase(
             name=f'{method} {url}',
             method=method,
             url=url,
             headers=self.get_partial_update_headers(),
-            json=self.get_partial_update_body(),
+            json=json,
             assertions=self.get_partial_update_assertions()
         )
+
+        # TODO refactor !!
+        if isinstance(self, FakerAutoRESTUseCaseSet) and not json:
+            return self.get_faker().fake_use_case(usecase)
+        return usecase
 
 
 class DeleteUseCaseMixin:
@@ -160,6 +179,9 @@ class RetrieveUseCaseMixin:
 
     def get_retrieve_method(self):
         return self.retrieve_method
+
+    def get_retrieve_assertions(self):
+        return self.retrieve_assertions
 
     def add_retrieve_use_cases(self):
         url = self.get_retrieve_url()
@@ -235,6 +257,8 @@ class RESTUseCaseSet(
     """
 
     url = None
+    enable = []
+    disable = []
 
     def __init__(self, cases: List[UnitUseCase] | None = None):
         super().__init__(cases)
@@ -254,9 +278,20 @@ class RESTUseCaseSet(
                 inspect.ismethod(member)
                 and member_name.startswith('add_')
                 and member_name.endswith('_use_cases')
+                and all(disable not in member_name for disable in self.disable)
             ):
                 if _cases := member():
                     if isinstance(_cases, (list, tuple)):
                         self.add_cases(_cases)
                     else:
                         self.add_case(_cases)
+
+
+class FakerAutoRESTUseCaseSet(RESTUseCaseSet):
+
+    def get_faker(self):
+        assert hasattr(self, 'faker_class'), 'You must define `faker_class` attribute in your class.'
+        faker_class = self.faker_class
+        assert isinstance(faker_class, type), '`faker_class` must be a class.'
+        assert issubclass(faker_class, UseCaseFaker), '`faker_class` must be a subclass of `UseCaseFaker`.'
+        return faker_class()

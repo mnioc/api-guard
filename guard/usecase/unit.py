@@ -2,6 +2,7 @@ from typing import Optional
 from requests.models import Request
 from guard.http.client import HttpClient
 from guard.usecase.bases import UseCase
+from guard.http.hooks import log_response
 
 
 class UnitUseCase(UseCase):
@@ -40,6 +41,122 @@ class UnitUseCase(UseCase):
         self.request = Request(method.upper(), url, **kwargs)
         self.assertions = assertions or []
 
+    def set_name(self, name: str) -> None:
+        """
+        This method is used to set the use case name.
+        """
+        self.name = name
+
+    def set_client(self, client: HttpClient) -> None:
+        """
+        This method is used to set the HTTP client.
+        """
+        self.client = client
+
+    def add_assertion(self, assertion) -> None:
+        """
+        This method is used to add an assertion.
+        """
+        if assertion not in self.assertions:
+            self.assertions.append(assertion)
+    
+    def clear_assertions(self) -> None:
+        """
+        This method is used to clear assertions.
+        """
+        self.assertions = []
+
+    def extend_assertions(self, assertions: list) -> None:
+        """
+        This method is used to extend assertions.
+        """
+        for assertion in assertions:
+            self.add_assertion(assertion)
+
+    def set_request_method(self, method: str) -> None:
+        """
+        This method is used to set the HTTP method.
+        """
+        self.request.method = method.upper()
+
+    def set_request_url(self, url: str) -> None:
+        """
+        This method is used to set the HTTP url.
+        """
+        self.request.url = url
+
+    def set_request_headers(self, headers: dict) -> None:
+        """
+        This method is used to set the HTTP headers.
+        """
+        self.request.headers = headers
+
+    def set_request_body(self, body: str) -> None:
+        """
+        This method is used to set the HTTP body.
+        """
+        self.request.body = body
+
+    def set_request_params(self, params: dict) -> None:
+        """
+        This method is used to set the HTTP params.
+        """
+        self.request.params = params
+
+    def set_request_cookies(self, cookies: dict) -> None:
+        """
+        This method is used to set the HTTP cookies.
+        """
+        self.request.cookies = cookies
+
+    def set_request_auth(self, auth: tuple) -> None:
+        """
+        This method is used to set the HTTP auth.
+        """
+        self.request.auth = auth
+
+    def set_request_files(self, files: dict) -> None:
+        """
+        This method is used to set the HTTP files.
+        """
+        self.request.files = files
+
+    def set_request_proxies(self, proxies: dict) -> None:
+        """
+        This method is used to set the HTTP proxies.
+        """
+        self.request.proxies = proxies
+
+    def set_request_hooks(self, hooks: dict) -> None:
+        """
+        This method is used to set the HTTP hooks.
+        """
+        self.request.hooks = hooks
+
+    def set_request_stream(self, stream: bool) -> None:
+        """
+        This method is used to set the HTTP stream.
+        """
+        self.request.stream = stream
+
+    def set_request_verify(self, verify: bool) -> None:
+        """
+        This method is used to set the HTTP verify.
+        """
+        self.request.verify = verify
+
+    def set_request_cert(self, cert: str) -> None:
+        """
+        This method is used to set the HTTP cert.
+        """
+        self.request.cert = cert
+
+    def set_request_json(self, json: dict) -> None:
+        """
+        This method is used to set the HTTP json.
+        """
+        self.request.json = json
+
     def execute(self) -> None:
         """
         This method is used to execute the use case.
@@ -47,6 +164,7 @@ class UnitUseCase(UseCase):
         if self.client is None:
             self.client = HttpClient()
         response = self.client.send_request(self.request)
+        log_response(response)
         try:
             for assertion in self.assertions:
                 assertion(response)
@@ -54,3 +172,25 @@ class UnitUseCase(UseCase):
             self.add_failed_reason(str(e))
             self.do_fail()
         self.response = response
+
+    def copy(self) -> 'UnitUseCase':
+        """
+        This method is used to copy the use case.
+        """
+        return UnitUseCase(
+            self.request.method,
+            self.request.url,
+            self.name,
+            self.client,
+            self.assertions,
+            **{
+                'headers': getattr(self.request, 'headers', None),
+                'data': getattr(self.request, 'data', None),
+                'params': getattr(self.request, 'params', None),
+                'cookies': getattr(self.request, 'cookies', None),
+                'auth': getattr(self.request, 'auth', None),
+                'files': getattr(self.request, 'files', None),
+                'hooks': getattr(self.request, 'hooks', None),
+                'json': getattr(self.request, 'json', None)
+            }
+        )

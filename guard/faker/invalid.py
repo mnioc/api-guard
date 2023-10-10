@@ -1,7 +1,7 @@
 import copy
 import inspect
 import abc
-from typing import Any, Type, Dict, Optional
+from typing import Type, Dict
 from collections import namedtuple
 from guard.faker.enums import InvalidDataType
 from guard.utils import generate_random_string
@@ -36,10 +36,10 @@ class InvalidValueProvider(metaclass=StrategyMeta):
         self.field = field
 
     def provide(self):
-        return InvalidValue(
+        return [InvalidValue(
             self.get_invalid_value(),
             self.invalid_data_type
-        )
+        )]
 
     def get_invalid_value(self):
         return self.invalid_value
@@ -53,19 +53,19 @@ class InvalidValueProvider(metaclass=StrategyMeta):
 
 class NullValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.NULL
+    invalid_data_type = InvalidDataType.NULL.value
     invalid_value = None
 
 
 class BlankValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.BLANK
+    invalid_data_type = InvalidDataType.BLANK.value
     invalid_value = ''
 
 
 class InvalidChoiceValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.INVALID_CHOICE
+    invalid_data_type = InvalidDataType.INVALID_CHOICE.value
 
     def get_invalid_value(self):
         assert self.field.choices is not None, "Field must have choices"
@@ -77,7 +77,7 @@ class InvalidChoiceValueProvider(InvalidValueProvider):
 
 class InvalidTypeValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.INVALID_TYPE
+    invalid_data_type = InvalidDataType.INVALID_TYPE.value
 
     def get_invalid_value(self):
         pass
@@ -85,7 +85,7 @@ class InvalidTypeValueProvider(InvalidValueProvider):
 
 class ExceedMaxLengthValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.EXCEED_MAX_LENGTH
+    invalid_data_type = InvalidDataType.EXCEED_MAX_LENGTH.value
 
     def get_invalid_value(self):
         assert self.field.max_length is not None, "Field must have max_length"
@@ -94,7 +94,7 @@ class ExceedMaxLengthValueProvider(InvalidValueProvider):
 
 class ExceedMinLengthValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.EXCEED_MIN_LENGTH
+    invalid_data_type = InvalidDataType.EXCEED_MIN_LENGTH.value
 
     def get_invalid_value(self):
         assert self.field.min_length is not None, "Field must have min_length"
@@ -103,7 +103,7 @@ class ExceedMinLengthValueProvider(InvalidValueProvider):
 
 class ExceedMaxValueValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.EXCEED_MAX_VALUE
+    invalid_data_type = InvalidDataType.EXCEED_MAX_VALUE.value
 
     def get_invalid_value(self):
         assert self.field.max_value is not None, "Field must have max_value"
@@ -112,7 +112,7 @@ class ExceedMaxValueValueProvider(InvalidValueProvider):
 
 class ExceedMinValueValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.EXCEED_MIN_VALUE
+    invalid_data_type = InvalidDataType.EXCEED_MIN_VALUE.value
 
     def get_invalid_value(self):
         assert self.field.min_value is not None, "Field must have min_value"
@@ -121,34 +121,35 @@ class ExceedMinValueValueProvider(InvalidValueProvider):
 
 class InvalidDictValueProvider(InvalidValueProvider):
 
-    invalid_data_type = InvalidDataType.INVALID_DICT
+    invalid_data_type = InvalidDataType.INVALID_DICT.value
 
     def provide(self):
         field = self.field
         values = []
 
-        # for field_name, field_instance in field.fields.items():
+        for field_name, field_instance in field.fields.items():
 
-        #     if field_instance.required:
-        #         valid_value_copy = copy.deepcopy(field.generate_valid_value())
-        #         del valid_value_copy[field_name]
-        #         values.append(
-        #             InvalidDictValue(
-        #                 value=valid_value_copy,
-        #                 type=InvalidDataType.MISSING_REQUIRE,
-        #                 sub_field=field_name
-        #             )
-        #         )
+            # If field is required, remove it from the dict
+            if field_instance.required:
+                valid = copy.deepcopy(field.fake_valid())
+                del valid[field_name]
+                values.append(
+                    InvalidDictValue(
+                        value=valid,
+                        type=InvalidDataType.MISSING_REQUIRE,
+                        sub_field=field_name
+                    )
+                )
 
-        #     for invalid_value in field_instance.generate_invalid_values():
-        #         valid_value_copy = copy.deepcopy(field.generate_valid_value())
-        #         valid_value_copy[field_name] = invalid_value.value
-        #         values.append(
-        #             InvalidDictValue(
-        #                 value=valid_value_copy,
-        #                 type=invalid_value.type,
-        #                 sub_field=field_name
-        #             )
-        #         )
+            for invalid_value in field_instance.fake_invalid():
+                valid = copy.deepcopy(field.fake_valid())
+                valid[field_name] = invalid_value.value
+                values.append(
+                    InvalidDictValue(
+                        value=valid,
+                        type=invalid_value.type,
+                        sub_field=field_name
+                    )
+                )
 
         return values

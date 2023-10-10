@@ -3,7 +3,7 @@ from typing import Any, List, Optional, Tuple, Union
 import random
 import string
 from guard.faker.enums import FieldType, InvalidDataType
-from guard.faker.invalid import InvalidValueProvider
+from guard.faker.invalid import InvalidValueProvider, InvalidValue, InvalidDictValue
 
 
 class Field:
@@ -35,12 +35,30 @@ class Field:
         self.required = required
         self.allow_null = allow_null
 
+        self._invalid_provider: List[InvalidValueProvider] = []
+
+        self._valid: Any = ...
+        self._invalid: List[InvalidValue | InvalidDictValue] = []
+
         if not self.allow_null:
             self.register_invalid_provider(
                 InvalidValueProvider.get_provider(InvalidDataType.NULL.value, self)
             )
 
-        self._invalid_provider: List[InvalidValueProvider] = []
+        self._already_valid = False
+
+    @property
+    def valid_value(self):
+        if self._valid is Ellipsis:
+            self._valid = self.fake_valid()
+        return self._valid
+
+    @property
+    def invalid_value(self):
+        if self._invalid is None:
+            self._invalid = []
+            self.fake_invalid()
+        return self._invalid
 
     def register_invalid_provider(self, provider):
         """
@@ -64,7 +82,11 @@ class Field:
         Generate invalid data.
         """
         for provider in self._invalid_provider:
-            yield provider.provide()
+            # breakpoint()
+            self._invalid.extend(
+                provider.provide()
+            )
+        return self._invalid
 
 
 class BooleanField(Field):
@@ -276,10 +298,8 @@ class DictField(Field):
         )
 
     def fake_valid(self):
-        if self.valid_value is not None:
-            return self.valid_value
         return {
-            field_name: field_instance.generate_valid_value()
+            field_name: field_instance.valid_value
             for field_name, field_instance in self.fields.items()
         }
 
@@ -314,10 +334,8 @@ class ListField(Field):
         assert self.max_length >= self.min_length, "Maximum length must be greater than or equal to minimum length"
 
     def fake_valid(self):
-        if self.valid_value is not None:
-            return self.valid_value
         random_length = self.length or random.randint(self.min_length, self.max_length)
         return [
-            field.generate_valid_value()
+            field.valid_value
             for field in self.fields
         ][:random_length]
