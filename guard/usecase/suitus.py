@@ -1,5 +1,5 @@
 import inspect
-from typing import List, Optional
+from typing import List, Optional, Union, Callable, Dict, Any
 from colorama import Fore
 from prettytable import PrettyTable
 import json
@@ -12,17 +12,22 @@ class UseCaseSuite(UseCase):
     show_result = False
     show_response_body = False
 
-    def __init__(self, cases: Optional[List[UnitUseCase]] = None):
-        self._cases = cases
-        if self._cases is None:
-            self._cases = []
+    def __init__(
+        self,
+        cases: Optional[List[UnitUseCase]] = None,
+        pre_hooks: Optional[List[dict]] = None,
+        post_hooks: Optional[List[dict]] = None,
+    ):
+        self._cases = cases or []
+        self.pre_hooks = pre_hooks or []
+        self.post_hooks = post_hooks or []
         super().__init__()
-    
+
     def get_cases(self) -> List[UnitUseCase]:
         return self._cases
 
-    def add_case(self, case: UnitUseCase) -> None:
-        assert isinstance(case, UnitUseCase), '`case` must be `UnitUseCase`'
+    def add_case(self, case: UseCase) -> None:
+        assert isinstance(case, UseCase), '`case` must be `UseCase`'
         self._cases.append(case)
 
     def add_cases(self, cases: List[UnitUseCase]) -> None:
@@ -57,9 +62,11 @@ class UseCaseSuite(UseCase):
                     except Exception:
                         print(f'response  | {Fore.RED}{case.response.text}')
 
-    def execute(self) -> None:
+    def execute(self, client=None) -> None:
+        self.execute_pre_hooks()
         for test_case in self._cases:
-            test_case.execute()
+            test_case.execute(client)
 
         if self.show_result:
             self.show()
+        self.execute_post_hooks()

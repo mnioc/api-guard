@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any, Union, Callable
 from requests.models import Request
 from guard.http.client import HttpClient
 from guard.usecase.bases import UseCase
@@ -31,6 +31,8 @@ class UnitUseCase(UseCase):
         name: Optional[str] = None,
         client: Optional[HttpClient] = None,
         assertions: Optional[list] = None,
+        pre_hooks: Optional[List[Dict[str, Any]]] = None,
+        post_hooks: Optional[List[Dict[str, Any]]] = None,
         **kwargs
     ):
         if name is None:
@@ -40,6 +42,8 @@ class UnitUseCase(UseCase):
         self.client = client
         self.request = Request(method.upper(), url, **kwargs)
         self.assertions = assertions or []
+        self.pre_hooks = pre_hooks or []
+        self.post_hooks = post_hooks or []
 
     def set_name(self, name: str) -> None:
         """
@@ -59,7 +63,7 @@ class UnitUseCase(UseCase):
         """
         if assertion not in self.assertions:
             self.assertions.append(assertion)
-    
+
     def clear_assertions(self) -> None:
         """
         This method is used to clear assertions.
@@ -91,11 +95,11 @@ class UnitUseCase(UseCase):
         """
         self.request.headers = headers
 
-    def set_request_body(self, body: str) -> None:
+    def set_request_data(self, body: str) -> None:
         """
         This method is used to set the HTTP body.
         """
-        self.request.body = body
+        self.request.data = body
 
     def set_request_params(self, params: dict) -> None:
         """
@@ -121,35 +125,11 @@ class UnitUseCase(UseCase):
         """
         self.request.files = files
 
-    def set_request_proxies(self, proxies: dict) -> None:
-        """
-        This method is used to set the HTTP proxies.
-        """
-        self.request.proxies = proxies
-
     def set_request_hooks(self, hooks: dict) -> None:
         """
         This method is used to set the HTTP hooks.
         """
         self.request.hooks = hooks
-
-    def set_request_stream(self, stream: bool) -> None:
-        """
-        This method is used to set the HTTP stream.
-        """
-        self.request.stream = stream
-
-    def set_request_verify(self, verify: bool) -> None:
-        """
-        This method is used to set the HTTP verify.
-        """
-        self.request.verify = verify
-
-    def set_request_cert(self, cert: str) -> None:
-        """
-        This method is used to set the HTTP cert.
-        """
-        self.request.cert = cert
 
     def set_request_json(self, json: dict) -> None:
         """
@@ -157,14 +137,15 @@ class UnitUseCase(UseCase):
         """
         self.request.json = json
 
-    def execute(self) -> None:
+    def execute(self, client=None) -> None:
         """
         This method is used to execute the use case.
         """
+        self.execute_pre_hooks()
+        self.client = client
         if self.client is None:
             self.client = HttpClient()
         response = self.client.send_request(self.request)
-        log_response(response)
         try:
             for assertion in self.assertions:
                 assertion(response)
@@ -172,6 +153,7 @@ class UnitUseCase(UseCase):
             self.add_failed_reason(str(e))
             self.do_fail()
         self.response = response
+        self.execute_post_hooks()
 
     def copy(self) -> 'UnitUseCase':
         """

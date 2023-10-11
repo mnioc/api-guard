@@ -40,7 +40,7 @@ class AssertDictKeyNotExists(AssertDict):
         self.key = key
         if isinstance(self.key, str):
             self.key = [self.key]
-    
+
     @property
     def repr_key(self) -> str:
         return '.'.join(self.key)

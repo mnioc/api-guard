@@ -1,12 +1,15 @@
 import os
 import sys
+import time
+import threading
 import importlib.util
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from guard.http.client import HttpClient
 from guard.logger import logger
 from guard.usecase.loader import UseCaseLoader
 from guard.usecase.evaluator import TestEvaluator
 from guard.usecase.registry import registry
+from guard.usecase.unit import UseCase
 
 
 class Runner:
@@ -29,7 +32,7 @@ class Runner:
     ) -> None:
         self.root_path = root_path
         self.client = self._get_or_create_client(client_path)
-        self.cases = []
+        self.cases: List[UseCase] = []
         self.evaluator = None
         self.prefix = prefix
 
@@ -78,7 +81,8 @@ class Runner:
             cases (list): The test cases.
 
         """
-        self.cases.extend(cases)
+        for case in cases:
+            self.add_case(case)
 
     def auto_discover(self) -> None:
         logger.info(f'Auto discovering test cases in {self.root_path}...')
@@ -106,9 +110,28 @@ class Runner:
 
     def run(self) -> None:
         self.auto_discover()
-        for case in self.cases:
-            if case.client is None and self.client is not None:
-                case.client = self.client
-            case.execute()
+        start_time = time.time()
+        self.execute_cases()
+        # for case in self.cases:
+        #     case.execute(self.client)
+        end_time = time.time()
         self.evaluator = TestEvaluator(self.cases)
         self.evaluator.show_test_result()
+        logger.info(f'Total time: {end_time - start_time:.2f}s')
+
+    def _execute_cases(self, cases):
+        for case in cases:
+            case.execute(self.client)
+
+    def execute_cases(self):
+        cases = self.cases
+        n_workers = 10
+        threads = [
+            threading.Thread(target=self._execute_cases, args=(cases[i::n_workers],))
+            for i in range(n_workers)
+        ]
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()

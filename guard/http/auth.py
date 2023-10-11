@@ -133,7 +133,7 @@ class BearerTokenAuthentication(Authentication):
                 retries += 1
                 print(response.text)
                 error_msg = f"Failed to get the token. {e}"
-                logger.warn(f"{error_msg}. Retrying...")
+                logger.warning(f"{error_msg}. Retrying...")
 
         if error_msg:
             raise APIAuthFailedException(error_msg)

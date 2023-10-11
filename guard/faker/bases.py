@@ -1,13 +1,13 @@
 import inspect
 import copy
-from typing import List, Dict, Union, Any, Optional
+from typing import List, Dict, Union, Any
 from collections import namedtuple
 from guard.faker.fields import Field, DictField
 from guard.faker.enums import InvalidDataType
 from guard.faker.invalid import InvalidValue, InvalidDictValue
 from guard.assertion.bases import Assertion
 from guard.usecase.unit import UnitUseCase
-from guard.assertion.bases import Assertion
+from guard.usecase.suitus import UseCaseSuite
 from guard.assertion.container import AssertDict
 from guard.logger import logger
 from guard.faker.assert_handler import handle_assertion
@@ -130,7 +130,7 @@ class Faker(metaclass=RegisterFieldMetaclass):
             except AssertionError:
                 continue
 
-            logger.info(f'Condition: {condition} is True')
+            logger.info(f'Condition: {condition} is `True`')
 
             for constraint in relation_constraint.constraints:
 
@@ -139,7 +139,7 @@ class Faker(metaclass=RegisterFieldMetaclass):
                 try:
                     constraint(valid_data)
                 except AssertionError:
-                    logger.info(f'Constraint {constraint} is False. change valid value.')
+                    logger.info(f'Constraint {constraint} is `False`. change valid value.')
 
                     if len(constraint.key) == 1:
                         default_valid_data = self._declared_fields[constraint.key[0]].valid_value
@@ -167,7 +167,8 @@ class UseCaseFaker(Faker):
         default_invalid_assertions: List[Assertion] = []
 
     def fake_use_case(self, usecase) -> str:
-        return self.faker_valid_use_case(usecase) + self.faker_invalid_use_case(usecase)
+        usecases = self.faker_valid_use_case(usecase) + self.faker_invalid_use_case(usecase)
+        return [UseCaseSuite(usecases)]
 
     def get_default_invalid_assertions(self) -> List[Assertion]:
         if not hasattr(self, 'Meta') or not getattr(self.Meta, 'default_invalid_assertions', None):

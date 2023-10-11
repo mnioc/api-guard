@@ -57,6 +57,7 @@ class UpdateUseCaseMixin:
     update_headers = {'Content-Type': 'application/json'}
     update_body = {}
     update_assertions = [AssertHttpStatusCodeEqual(200)]
+    update_post_hooks = []
 
     def get_update_url(self):
         if self.update_url is None and self.retrieve_url is None:
@@ -91,6 +92,10 @@ class UpdateUseCaseMixin:
         # TODO refactor !!
         if isinstance(self, FakerAutoRESTUseCaseSet) and not json:
             return self.get_faker().fake_use_case(usecase)
+
+        if self.update_post_hooks:
+            usecase.extend_post_hooks(self.update_post_hooks)
+
         return usecase
 
 
@@ -101,6 +106,7 @@ class PartialUpdateUseCaseMixin:
     partial_update_headers = {'Content-Type': 'application/json'}
     partial_update_body = {}
     partial_update_assertions = [AssertHttpStatusCodeEqual(200)]
+    partial_update_post_hooks = []
 
     def get_partial_update_url(self):
         if self.partial_update_url is None and self.retrieve_url is None:
@@ -135,6 +141,10 @@ class PartialUpdateUseCaseMixin:
         # TODO refactor !!
         if isinstance(self, FakerAutoRESTUseCaseSet) and not json:
             return self.get_faker().fake_use_case(usecase)
+
+        if self.partial_update_post_hooks:
+            usecase.extend_post_hooks(self.partial_update_post_hooks)
+
         return usecase
 
 
@@ -171,6 +181,7 @@ class RetrieveUseCaseMixin:
     retrieve_method = 'GET'
     retrieve_url = None
     retrieve_assertions = [AssertHttpStatusCodeEqual(200)]
+    retrieve_post_hooks = []
 
     def get_retrieve_url(self):
         if self.retrieve_url is None and self.url is None:
@@ -186,12 +197,14 @@ class RetrieveUseCaseMixin:
     def add_retrieve_use_cases(self):
         url = self.get_retrieve_url()
         method = self.get_retrieve_method()
-        return UnitUseCase(
+        case = UnitUseCase(
             name=f'{method} {url}',
             method=method,
             url=url,
             assertions=self.get_retrieve_assertions()
         )
+        if self.retrieve_post_hooks:
+            case.extend_post_hooks(self.retrieve_post_hooks)
 
 
 class ListUseCaseMixin:

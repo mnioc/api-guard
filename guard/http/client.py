@@ -5,7 +5,7 @@ from typing import Any, Type, Dict, Optional
 from requests.models import Response, Request
 from guard.http.enums import HttpAuthType
 from guard.http.auth import Authentication
-from guard.http.hooks import show_response_table
+from guard.http.hooks import show_response_table, log_response
 
 
 class StrategyMeta(abc.ABCMeta):
@@ -90,6 +90,7 @@ class HttpClient(requests.Session, metaclass=StrategyMeta):
         res = self.send(prep, **send_kwargs)
         if show_table:
             show_response_table(res, json_path, ignore_show_keys)
+        log_response(res)
         return res
 
     def send_request(self, request: Request, **kwargs: Any) -> Response:
@@ -104,7 +105,9 @@ class HttpClient(requests.Session, metaclass=StrategyMeta):
             request = self.authentication.set_authentication(request)
 
         prep = self.prepare_request(request)
-        return self.send(prep, **kwargs)
+        res = self.send(prep, **kwargs)
+        log_response(res)
+        return res
 
     def get(self, url: str, **kwargs: Any) -> Response:
         """
