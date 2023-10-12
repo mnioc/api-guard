@@ -20,9 +20,18 @@ def get_value_from_json_path(
     return match[0].value if (match := json_path_parser.find(json_data)) else None
 
 
-def show_data_table(data: Union[Dict[str, Any], List[Any]], title: str = '', ignore_keys: List[str] = None):
+def show_data_table(
+    data: Union[Dict[str, Any], List[Any]],
+    title: str = '',
+    ignore_keys: List[str] = None,
+    only_keys: List[str] = None,
+):
+
     if ignore_keys is None:
         ignore_keys = []
+
+    if only_keys is None:
+        only_keys = []
 
     if not data:
         table = PrettyTable()
@@ -35,18 +44,22 @@ def show_data_table(data: Union[Dict[str, Any], List[Any]], title: str = '', ign
         data = [data]
 
     if isinstance(data, list):
-        _show_data_table_list(data, ignore_keys, title)
+        _show_data_table_list(data, ignore_keys, only_keys, title)
 
 
-def _show_data_table_list(data, ignore_keys, title):
+def _show_data_table_list(data, ignore_keys, only_keys, title):
     max_keys_data = max(data, key=lambda item: len(item.keys()))
-    titles = [key for key in max_keys_data.keys() if key not in ignore_keys]
-
+    titles = only_keys or [
+        key for key in max_keys_data.keys() if key not in ignore_keys
+    ]
     table = PrettyTable()
     table.title = title
     table.field_names = titles
     for item in data:
-        row_data = [to_long_data(item.get(title)) for title in titles if title not in ignore_keys]
+        if only_keys:
+            row_data = [to_long_data(item.get(title)) for title in only_keys]
+        else:
+            row_data = [to_long_data(item.get(title)) for title in titles if title not in ignore_keys]
         table.add_row(row_data)
     print(table)
 

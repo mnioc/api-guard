@@ -1,4 +1,7 @@
+import inspect
 from typing import Dict, List, Optional, Union, Callable
+from guard.logger import logger
+
 
 
 class UseCase:
@@ -21,8 +24,14 @@ class UseCase:
         """
         This method is used to add a pre hook.
         """
-        if hook not in self.pre_hooks:
-            self.pre_hooks.append(hook)
+        """
+        This method is used to add a post hook.
+        """
+        if isinstance(hook, dict):
+            if hook not in self.pre_hooks:
+                self.pre_hooks.append(hook)
+        else:
+            self.add_pre_hook({'func': hook})
 
     def clear_pre_hooks(self) -> None:
         """
@@ -73,7 +82,12 @@ class UseCase:
         for hook in hooks:
             func = hook.get('func')
             if func is not None and callable(func):
-                func(*hook.get('args', []), **hook.get('kwargs', {}))
+                func_signature = inspect.signature(func)
+                func_params = func_signature.parameters.keys()
+                if 'usecase' in func_params:
+                    func(usecase=self, *hook.get('args', []), **hook.get('kwargs', {}))
+                else:
+                    func(*hook.get('args', []), **hook.get('kwargs', {}))
 
     def execute_post_hooks(self) -> None:
         """

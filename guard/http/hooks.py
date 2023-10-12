@@ -1,3 +1,5 @@
+import contextlib
+from functools import singledispatch
 from requests.models import Response
 from guard.logger import logger
 from guard.utils import get_value_from_json_path, show_data_table
@@ -15,7 +17,13 @@ def log_response(response: Response, *args, **kwargs) -> None:
         logger.info(msg)
 
 
-def show_response_table(response: Response, response_data_json_path: str, ignore_keys=None, *args, **kwaargs) -> None:
+def show_response_table(
+    response: Response,
+    response_data_json_path: str,
+    ignore_keys=None,
+    only_keys=None,
+    *args, **kwaargs
+) -> None:
     """
     This function is used to show the response in a table format.
     """
@@ -24,4 +32,4 @@ def show_response_table(response: Response, response_data_json_path: str, ignore
     except Exception:
         return
     data = get_value_from_json_path(data, response_data_json_path)
-    show_data_table(data, f'{response.request.method} {response.request.url}', ignore_keys)
+    show_data_table(data, f'{response.request.method} {response.request.url}', ignore_keys, only_keys)

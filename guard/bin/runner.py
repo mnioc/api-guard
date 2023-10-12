@@ -111,9 +111,9 @@ class Runner:
     def run(self) -> None:
         self.auto_discover()
         start_time = time.time()
-        self.execute_cases()
-        # for case in self.cases:
-        #     case.execute(self.client)
+        # self.execute_cases()
+        for case in self.cases:
+            case.execute(self.client)
         end_time = time.time()
         self.evaluator = TestEvaluator(self.cases)
         self.evaluator.show_test_result()

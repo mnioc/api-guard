@@ -168,7 +168,7 @@ class UseCaseFaker(Faker):
 
     def fake_use_case(self, usecase) -> str:
         usecases = self.faker_valid_use_case(usecase) + self.faker_invalid_use_case(usecase)
-        return [UseCaseSuite(usecases)]
+        return UseCaseSuite(usecases)
 
     def get_default_invalid_assertions(self) -> List[Assertion]:
         if not hasattr(self, 'Meta') or not getattr(self.Meta, 'default_invalid_assertions', None):

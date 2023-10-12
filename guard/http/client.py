@@ -109,11 +109,14 @@ class HttpClient(requests.Session, metaclass=StrategyMeta):
         log_response(res)
         return res
 
-    def get(self, url: str, **kwargs: Any) -> Response:
+    def get(self, url: str, show_table=False, json_path=None, ignore_keys=None, **kwargs: Any) -> Response:
         """
         This method is used to send a GET request.
         """
-        return self.request('GET', url, **kwargs)
+        res = self.request('GET', url, **kwargs)
+        if show_table:
+            show_response_table(res, json_path, ignore_keys)
+        return res
 
     def post(self, url: str, **kwargs: Any) -> Response:
         """

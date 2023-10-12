@@ -1,8 +1,8 @@
-from typing import Optional, List, Dict, Any, Union, Callable
+from typing import Optional, List, Dict, Any
 from requests.models import Request
 from guard.http.client import HttpClient
 from guard.usecase.bases import UseCase
-from guard.http.hooks import log_response
+from guard.logger import logger
 
 
 class UnitUseCase(UseCase):
@@ -41,9 +41,15 @@ class UnitUseCase(UseCase):
 
         self.client = client
         self.request = Request(method.upper(), url, **kwargs)
+        if getattr(self.request, 'params', None):
+            self.name += '?'
+            for key, value in self.request.params.items():
+                self.name += f'{key}={value}&'
+            self.name = self.name.rstrip('&')
         self.assertions = assertions or []
         self.pre_hooks = pre_hooks or []
         self.post_hooks = post_hooks or []
+        self.response = None
 
     def set_name(self, name: str) -> None:
         """
